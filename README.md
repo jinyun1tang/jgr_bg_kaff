@@ -1,1 +1,3 @@
-# jgr_bg_kaff
+# python script for the paper
+
+# xx
