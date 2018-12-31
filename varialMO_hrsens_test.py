@@ -3,8 +3,9 @@ import csv
 from supeca import supmic_flx
 from su_model import su_flx
 import numpy as np
+k2f=10.  #number of C atmos per substrate molecule
 #set up model parameters
-DZ=0.15  #topsoil thickness, 10 cm
+DZ=0.1  #topsoil thickness, 10 cm
 alphaV=80.0  #volume a cell occupies
 mb=2.   #mol of microbial C
 Ncello=[10.0,20.,60.0,120.]  #number of cells per microsite, this is for oxygen
@@ -42,7 +43,7 @@ while k < kt:
     Ncell=10
     k1_s,Kaff_s,Kaff_s_0=calc_Kaff_SC(s_sat, theta, epsi, taug, tauw,  film, DZ, Ncell, alphaV)
     #supeca model
-    k2=k2*10.
+    k2=k2*k2f
     Km_s=2.0
     supf=supmic_flx(O2,S[2],factw, BT, ms[k], Km_s, Kaff_o2g, Kaff_s, kappa_tops, k2)
     supfmax=np.max(supf)
@@ -71,7 +72,7 @@ font = {'family': 'serif',
 
 plt_to_file=True
 if plt_to_file:
-    pdf=PdfPages('figure/varMO_hrsens.pdf')
+    pdf=PdfPages('figure/Figure8.pdf')
     fig=plt.figure()
 
 plt.subplot(121)

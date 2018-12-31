@@ -1,6 +1,12 @@
 import csv
+from DAMM_model import damm_flx
+from supeca import supmic_flx
+from su_model import su_flx
 from linearfit import linearfit
-from scipy.interpolate import interp1d
+
+k2f=10.  #number of C atmos per substrate molecule
+#from scipy.interpolate import interp1d
+print_stat=True
 r_sat1=[]
 r_hr1=[]
 with open('data/doran_1.csv', 'rb') as f:
@@ -50,8 +56,7 @@ with open('data/franz.csv', 'rb') as f:
         k=k+1
 
 
-o2scal=3.e-3
-o2scal=1.
+o2scal=1.e0
 sand=[]
 clay=[]
 soil_type=[]
@@ -80,11 +85,13 @@ pct_clay=np.array(clay)
 
 kt=len(pct_sand)
 
+
 #set up model parameters
-DZ=0.15  #topsoil thickness, 10 cm
+DZ=0.1  #topsoil thickness, 10 cm
 alphaV=80.0  #volume a cell occupies
 mb=2.0   #mol of microbial C
-Ncello=10.0  #number of cells per microsite, this is for oxygen
+#Ncello=120.0  #number of cells per microsite, this is for oxygen
+Ncello=10.0
 from Kaffapp import set_micpara
 set_micpara(1.e2)
 
@@ -96,11 +103,12 @@ BT=mb*cell_molC  #total number of cells, in mol /m3
 
 O2=8.57 # mol /m3
 S=0.3 #mol/m3 ~ 3.6 mg/L
-df=2.52
+
 k=0
 dammfls=[]
 sufls=[]
 supfls=[]
+df=3.
 kk=0
 pct_claym=0.
 pct_sandm=0.
@@ -113,38 +121,28 @@ while k < k1s:
     Kaff_o2g_full,Kaff_o2g,k2,k1_o2,k1_o2_full,kappa_tops=calc_Kaff_O2(s_sat, theta, epsi, taug, tauw, film, DZ, Ncello, BT, alphaV,factw)
     Kaff_o2g_full=Kaff_o2g_full*o2scal
     k1_o2_full=k1_o2_full/o2scal
-    k2=k2*10.
-    Vmax=BT*k2
-    Ncell=10
+    Ncell=Ncello
     k1_s,Kaff_s,Kaff_s_0=calc_Kaff_SC(s_sat, theta, epsi, taug, tauw,  film, DZ, Ncell, alphaV)
     #damm model
-    fO2=O2/(Kaff_o2g_full+O2)
-    fS=S/(Kaff_s+S)
-    dammf=fO2*fS*factw
+    k2=k2*k2f
+    Vmax=BT*k2
+    dammf=damm_flx(O2,S,factw,Kaff_s*1.e0,Kaff_o2g,kappa_tops,Vmax)
     damfmax=np.max(dammf)
     dammf=dammf/damfmax
     #su model
-    js=S*k1_s
-    jo2=O2*k1_o2_full
-    suf=1./(1./k2+1./jo2+1./js-1./(js+jo2))*factw
+    suf=su_flx(O2,S, factw,BT, k2*1.e0, k1_o2, k1_s,kappa_tops)
     sufmax=np.max(suf)
     suf=suf/sufmax
     #supeca model
     ms=0.0
     Km_s=2.0
-    nn=len(jo2)
-    ni=0
-    supf=np.zeros(nn)
-    while (ni<nn):
-        supf[ni]=supeca_model(O2,S,BT, ms, Kaff_o2g_full[ni], Kaff_s[ni], Km_s)*factw[ni]*k2
-        ni=ni+1
+    supf=supmic_flx(O2,S,factw, BT, ms, Km_s*1.e0, Kaff_o2g, Kaff_s, kappa_tops, k2)
     supfmax=np.max(supf)
     supf=supf/supfmax
     dammfls.append(dammf)
     sufls.append(suf)
     supfls.append(supf)
     k=k+1
-
 
 #compute the value for mean
 def calc_mean_func(pct_claym, pct_sandm):
@@ -153,43 +151,38 @@ def calc_mean_func(pct_claym, pct_sandm):
     Kaff_o2g_full,Kaff_o2g,k2,k1_o2,k1_o2_full,kappa_tops=calc_Kaff_O2(s_sat, theta, epsi, taug, tauw, film, DZ, Ncello, BT, alphaV,factw)
     Kaff_o2g_full=Kaff_o2g_full*o2scal
     k1_o2_full=k1_o2_full/o2scal
-    k2=k2*10.
-    Vmax=BT*k2
-    Ncell=10
+
+    Ncell=Ncello
     k1_s,Kaff_s,Kaff_s_0=calc_Kaff_SC(s_sat, theta, epsi, taug, tauw,  film, DZ, Ncell, alphaV)
     #damm model
-    fO2=O2/(Kaff_o2g_full+O2)
-    fS=S/(Kaff_s+S)
-    dammf=fO2*fS*factw
+    k2=k2*k2f
+    Vmax=BT*k2
+    dammf=damm_flx(O2,S,factw,Kaff_s*1.e0,Kaff_o2g,kappa_tops,Vmax)
     damfmax=np.max(dammf)
     dammf=dammf/damfmax
     #su model
-    js=S*k1_s
-    jo2=O2*k1_o2_full
-    suf=1./(1./k2+1./jo2+1./js-1./(js+jo2))*factw
+    suf=su_flx(O2,S, factw,BT, k2*1.e0, k1_o2, k1_s,kappa_tops)
     sufmax=np.max(suf)
     suf=suf/sufmax
     #supeca model
     ms=0.0
     Km_s=2.0
-    nn=len(jo2)
-    ni=0
-    supf=np.zeros(nn)
-    while (ni<nn):
-        supf[ni]=supeca_model(O2,S,BT, ms, Kaff_o2g_full[ni], Kaff_s[ni], Km_s)*factw[ni]*k2
-        ni=ni+1
+    supf=supmic_flx(O2,S,factw, BT, ms, Km_s, Kaff_o2g, Kaff_s, kappa_tops, k2)
     supfmax=np.max(supf)
     supf=supf/supfmax
     return dammf, suf, supf
 pct_claym=pct_claym/kk
 pct_sandm=pct_sandm/kk
 dammfm, sufm, supfm=calc_mean_func(pct_claym, pct_sandm)
+ff = open('model_tops2.txt', 'w')
+for jj in range(len(s_sat)):
+    ff.write('%.2f,%.3f,%.3f,%.3f\n'%(s_sat[jj],dammfm[jj],sufm[jj],supfm[jj]))
 plt_to_file=True
 import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 if plt_to_file:
-    pdf=PdfPages('figure/topsoi1.pdf')
+    pdf=PdfPages('figure/FigureS1.pdf')
     fig=plt.figure()
 
 font = {'family': 'serif',
@@ -198,18 +191,15 @@ font = {'family': 'serif',
         'size': 12,
         }
 plt.rcParams["figure.figsize"] = (11,8)
-if o2scal != 1.0:
-    ff = open('model_tops1.txt', 'w')
-meanf=dammfm
-f = interp1d(s_sat, meanf)
-r_hrnew=f(r_sat1)
-w1=linearfit(r_hrnew,r_hr1)
-print 'doran1 damm: y=x*%f+%f, R2=%f'%(w1[0],w1[2],w1[5])
-if o2scal != 1.0:
-    for jj in range(len(s_sat)):
-        ff.write('%.2f,%.3f,%.3f,%.3f\n'%(s_sat[jj],dammfm[jj],sufm[jj],supfm[jj]))
-
 plt.subplot(431)
+#meanf=np.mean(dammfls,0)
+meanf=dammfm
+#f = interp1d(s_sat, meanf)
+#r_hrnew=f(r_sat1)
+r_hrnew=np.interp(r_sat1,s_sat,meanf)
+if print_stat:
+    w1=linearfit(r_hrnew,r_hr1)
+    print 'doran1 damm: y=x*%f+%f, R2=%f'%(w1[0],w1[2],w1[5])
 plt.plot(s_sat,np.transpose(dammfls),'0.7')
 plt.plot(s_sat,dammfm,'k')
 plt.text(-0.04, 0.85, '(a1)',fontdict=font)
@@ -218,13 +208,15 @@ plt.xlim([-0.04,1.04])
 plt.xticks(np.arange(0, 1.2, step=0.2),[])
 plt.yticks(np.arange(0, 1.2, step=0.25),[0.0,'',0.5,'',1.0])
 plt.text(0.24, 0.05, 'Soil class 1',fontdict=font)
-
-meanf=sufm
-f = interp1d(s_sat, meanf)
-r_hrnew=f(r_sat1)
-w1=linearfit(r_hrnew,r_hr1)
-print 'doran1 su: y=x*%f+%f, R2=%f'%(w1[0],w1[2],w1[5])
 plt.subplot(432)
+#meanf=np.mean(sufls,0)
+meanf=sufm
+#f = interp1d(s_sat, meanf)
+#r_hrnew=f(r_sat1)
+r_hrnew=np.interp(r_sat1,s_sat,meanf)
+if print_stat:
+    w1=linearfit(r_hrnew,r_hr1)
+    print 'doran1 su: y=x*%f+%f, R2=%f'%(w1[0],w1[2],w1[5])
 plt.plot(s_sat,np.transpose(sufls),'0.7')
 plt.plot(s_sat,sufm,'k')
 plt.plot(r_sat1,r_hr1,'bo',markersize=4,markerfacecolor='w')
@@ -233,13 +225,16 @@ plt.xlim([-0.04,1.04])
 plt.xticks(np.arange(0, 1.2, step=0.2),[])
 plt.yticks(np.arange(0, 1.2, step=0.25),[])
 plt.text(0.24, 0.05, 'Soil class 1',fontdict=font)
-meanf=supfm
-f = interp1d(s_sat, meanf)
-r_hrnew=f(r_sat1)
-w1=linearfit(r_hrnew,r_hr1)
-print 'doran1 supeca: y=x*%f+%f, R2=%f'%(w1[0],w1[2],w1[5])
-print '-----------------------------------------------------'
 plt.subplot(433)
+#meanf=np.mean(supfls,0)
+meanf=supfm
+
+#f = interp1d(s_sat, meanf)
+#r_hrnew=f(r_sat1)
+r_hrnew=np.interp(r_sat1,s_sat,meanf)
+if print_stat:
+    w1=linearfit(r_hrnew,r_hr1)
+    print 'doran1 supeca: y=x*%f+%f, R2=%f'%(w1[0],w1[2],w1[5])
 plt.plot(s_sat,np.transpose(supfls),'0.7')
 plt.plot(s_sat,supfm,'k')
 plt.plot(r_sat1,r_hr1,'bo',markersize=4,markerfacecolor='w')
@@ -248,6 +243,7 @@ plt.xlim([-0.04,1.04])
 plt.xticks(np.arange(0, 1.2, step=0.2),[])
 plt.yticks(np.arange(0, 1.2, step=0.25),[])
 plt.text(0.24, 0.05, 'Soil class 1',fontdict=font)
+print '-----------------------------------------------------'
 dammfls=[]
 sufls=[]
 supfls=[]
@@ -263,32 +259,23 @@ while k < k2s:
     Kaff_o2g_full,Kaff_o2g,k2,k1_o2,k1_o2_full,kappa_tops=calc_Kaff_O2(s_sat, theta, epsi, taug, tauw, film, DZ, Ncello, BT, alphaV,factw)
     Kaff_o2g_full=Kaff_o2g_full*o2scal
     k1_o2_full=k1_o2_full/o2scal
-    k2=k2*10.
-    Vmax=BT*k2
-    Ncell=10
+
+    Ncell=Ncello
     k1_s,Kaff_s,Kaff_s_0=calc_Kaff_SC(s_sat, theta, epsi, taug, tauw,  film, DZ, Ncell, alphaV)
     #damm model
-    fO2=O2/(Kaff_o2g_full+O2)
-    fS=S/(Kaff_s+S)
-    dammf=fO2*fS*factw
+    k2=k2*k2f
+    Vmax=BT*k2
+    dammf=damm_flx(O2,S,factw,Kaff_s*1.e0,Kaff_o2g,kappa_tops,Vmax)
     damfmax=np.max(dammf)
     dammf=dammf/damfmax
     #su model
-    js=S*k1_s
-    jo2=O2*k1_o2_full
-    suf=1./(1./k2+1./jo2+1./js-1./(js+jo2))*factw
+    suf=su_flx(O2,S, factw,BT, k2*1.e0, k1_o2, k1_s,kappa_tops)
     sufmax=np.max(suf)
     suf=suf/sufmax
     #supeca model
-    Kaff_s=k2/k1_s
     ms=0.0
     Km_s=2.0
-    nn=len(jo2)
-    ni=0
-    supf=np.zeros(nn)
-    while (ni<nn):
-        supf[ni]=supeca_model(O2,S,BT, ms, Kaff_o2g_full[ni], Kaff_s[ni], Km_s)*factw[ni]*k2
-        ni=ni+1
+    supf=supmic_flx(O2,S,factw, BT, ms, Km_s, Kaff_o2g, Kaff_s, kappa_tops, k2)
     supfmax=np.max(supf)
     supf=supf/supfmax
     dammfls.append(dammf)
@@ -299,16 +286,18 @@ while k < k2s:
 pct_claym=pct_claym/kk
 pct_sandm=pct_sandm/kk
 dammfm, sufm, supfm=calc_mean_func(pct_claym, pct_sandm)
-if o2scal != 1.0:
-    for jj in range(len(s_sat)):
-        ff.write('%.2f,%.3f,%.3f,%.3f\n'%(s_sat[jj],dammfm[jj],sufm[jj],supfm[jj]))
+for jj in range(len(s_sat)):
+    ff.write('%.2f,%.3f,%.3f,%.3f\n'%(s_sat[jj],dammfm[jj],sufm[jj],supfm[jj]))
 
-meanf=dammfm
-f = interp1d(s_sat, meanf)
-r_hrnew=f(r_sat2)
-w1=linearfit(r_hrnew,r_hr2)
-print 'doran2 damm: y=x*%f+%f, R2=%f'%(w1[0],w1[2],w1[5])
 plt.subplot(434)
+#meanf=np.mean(dammfls,0)
+meanf=dammfm
+#f = interp1d(s_sat, meanf)
+#r_hrnew=f(r_sat2)
+r_hrnew=np.interp(r_sat2,s_sat,meanf)
+if print_stat:
+    w1=linearfit(r_hrnew,r_hr2)
+    print 'doran2 damm: y=x*%f+%f, R2=%f'%(w1[0],w1[2],w1[5])
 plt.plot(s_sat,np.transpose(dammfls),'0.7')
 plt.plot(s_sat,dammfm,'k')
 plt.plot(r_sat2,r_hr2,'bo',markersize=4,markerfacecolor='w')
@@ -317,12 +306,15 @@ plt.xlim([-0.04,1.04])
 plt.xticks(np.arange(0, 1.2, step=0.2),[])
 plt.yticks(np.arange(0, 1.2, step=0.25),[0.0,'',0.5,'',1.0])
 plt.text(0.24, 0.05, 'Soil class 2',fontdict=font)
-meanf=sufm
-f = interp1d(s_sat, meanf)
-r_hrnew=f(r_sat2)
-w1=linearfit(r_hrnew,r_hr2)
-print 'doran2 su: y=x*%f+%f, R2=%f'%(w1[0],w1[2],w1[5])
 plt.subplot(435)
+#meanf=np.mean(sufls,0)
+meanf=sufm
+#f = interp1d(s_sat, meanf)
+#r_hrnew=f(r_sat2)
+r_hrnew=np.interp(r_sat2,s_sat,meanf)
+if print_stat:
+    w1=linearfit(r_hrnew,r_hr2)
+    print 'doran2 su: y=x*%f+%f, R2=%f'%(w1[0],w1[2],w1[5])
 plt.plot(s_sat,np.transpose(sufls),'0.7')
 plt.plot(s_sat,sufm,'k')
 plt.plot(r_sat2,r_hr2,'bo',markersize=4,markerfacecolor='w')
@@ -331,13 +323,16 @@ plt.xlim([-0.04,1.04])
 plt.xticks(np.arange(0, 1.2, step=0.2),[])
 plt.yticks(np.arange(0, 1.2, step=0.25),[])
 plt.text(0.24, 0.05, 'Soil class 2',fontdict=font)
-meanf=supfm
-f = interp1d(s_sat, meanf)
-r_hrnew=f(r_sat2)
-w1=linearfit(r_hrnew,r_hr2)
-print 'doran2 supeca: y=x*%f+%f, R2=%f'%(w1[0],w1[2],w1[5])
-print '-----------------------------------------------------'
 plt.subplot(436)
+#meanf=np.mean(supfls,0)
+meanf=supfm
+
+#f = interp1d(s_sat, meanf)
+#r_hrnew=f(r_sat2)
+r_hrnew=np.interp(r_sat2,s_sat,meanf)
+if print_stat:
+    w1=linearfit(r_hrnew,r_hr2)
+    print 'doran2 supeca: y=x*%f+%f, R2=%f'%(w1[0],w1[2],w1[5])
 plt.plot(s_sat,np.transpose(supfls),'0.7')
 plt.plot(s_sat,supfm,'k')
 plt.plot(r_sat2,r_hr2,'bo',markersize=4,markerfacecolor='w')
@@ -346,6 +341,7 @@ plt.xlim([-0.04,1.04])
 plt.xticks(np.arange(0, 1.2, step=0.2),[])
 plt.yticks(np.arange(0, 1.2, step=0.25),[])
 plt.text(0.24, 0.05, 'Soil class 2',fontdict=font)
+print '-----------------------------------------------------'
 dammfls=[]
 sufls=[]
 supfls=[]
@@ -359,34 +355,25 @@ while k < kt:
     kk=kk+1
     factw=s_sat**(1./df)
     Kaff_o2g_full,Kaff_o2g,k2,k1_o2,k1_o2_full,kappa_tops=calc_Kaff_O2(s_sat, theta, epsi, taug, tauw, film, DZ, Ncello, BT, alphaV,factw)
-    k2=k2*10.
-    Vmax=BT*k2
+
     Kaff_o2g_full=Kaff_o2g_full*o2scal
     k1_o2_full=k1_o2_full/o2scal
-    Ncell=10
+    Ncell=Ncello
     k1_s,Kaff_s,Kaff_s_0=calc_Kaff_SC(s_sat, theta, epsi, taug, tauw,  film, DZ, Ncell, alphaV)
     #damm model
-    fO2=O2/(Kaff_o2g_full+O2)
-    fS=S/(Kaff_s+S)
-    dammf=fO2*fS*factw
+    k2=k2*k2f
+    Vmax=BT*k2
+    dammf=damm_flx(O2,S,factw,Kaff_s*1.e0,Kaff_o2g,kappa_tops,Vmax)
     damfmax=np.max(dammf)
     dammf=dammf/damfmax
     #su model
-    js=S*k1_s
-    jo2=O2*k1_o2_full
-    suf=1./(1./k2+1./jo2+1./js-1./(js+jo2))*factw
+    suf=su_flx(O2,S, factw,BT, k2*1.e0, k1_o2, k1_s,kappa_tops)
     sufmax=np.max(suf)
     suf=suf/sufmax
     #supeca model
-    Kaff_s=k2/k1_s
     ms=0.0
     Km_s=2.0
-    nn=len(jo2)
-    ni=0
-    supf=np.zeros(nn)
-    while (ni<nn):
-        supf[ni]=supeca_model(O2,S,BT, ms, Kaff_o2g_full[ni], Kaff_s[ni], Km_s)*factw[ni]*k2
-        ni=ni+1
+    supf=supmic_flx(O2,S,factw, BT, ms, Km_s, Kaff_o2g, Kaff_s, kappa_tops, k2)
     supfmax=np.max(supf)
     supf=supf/supfmax
     dammfls.append(dammf)
@@ -397,17 +384,18 @@ while k < kt:
 pct_claym=pct_claym/kk
 pct_sandm=pct_sandm/kk
 dammfm, sufm, supfm=calc_mean_func(pct_claym, pct_sandm)
-if o2scal != 1.0:
-    for jj in range(len(s_sat)):
-        ff.write('%.2f,%.3f,%.3f,%.3f\n'%(s_sat[jj],dammfm[jj],sufm[jj],supfm[jj]))
+for jj in range(len(s_sat)):
+    ff.write('%.2f,%.3f,%.3f,%.3f\n'%(s_sat[jj],dammfm[jj],sufm[jj],supfm[jj]))
 
-
-meanf=dammfm
-f = interp1d(s_sat, meanf)
-r_hrnew=f(r_sat3)
-w1=linearfit(r_hrnew,r_hr3)
-print 'doran3 damm: y=x*%f+%f, R2=%f'%(w1[0],w1[2],w1[5])
 plt.subplot(437)
+#meanf=np.mean(dammfls,0)
+meanf=dammfm
+#f = interp1d(s_sat, meanf)
+#r_hrnew=f(r_sat3)
+r_hrnew=np.interp(r_sat3,s_sat,meanf)
+if print_stat:
+    w1=linearfit(r_hrnew,r_hr3)
+    print 'doran3 damm: y=x*%f+%f, R2=%f'%(w1[0],w1[2],w1[5])
 plt.plot(s_sat,np.transpose(dammfls),'0.7')
 plt.plot(s_sat,dammfm,'k')
 plt.plot(r_sat3,r_hr3,'bo',markersize=4,markerfacecolor='w')
@@ -416,12 +404,15 @@ plt.xlim([-0.04,1.04])
 plt.xticks(np.arange(0, 1.2, step=0.2),[])
 plt.yticks(np.arange(0, 1.2, step=0.25),[0.0,'',0.5,'',1.0])
 plt.text(0.24, 0.05, 'Soil class 3',fontdict=font)
-meanf=sufm
-f = interp1d(s_sat, meanf)
-r_hrnew=f(r_sat3)
-w1=linearfit(r_hrnew,r_hr3)
-print 'doran3 su: y=x*%f+%f, R2=%f'%(w1[0],w1[2],w1[5])
 plt.subplot(438)
+#meanf=np.mean(sufls,0)
+meanf=sufm
+#f = interp1d(s_sat, meanf)
+#r_hrnew=f(r_sat3)
+r_hrnew=np.interp(r_sat3,s_sat,meanf)
+if print_stat:
+    w1=linearfit(r_hrnew,r_hr3)
+    print 'doran3 su: y=x*%f+%f, R2=%f'%(w1[0],w1[2],w1[5])
 plt.plot(s_sat,np.transpose(sufls),'0.7')
 plt.plot(s_sat,sufm,'k')
 plt.plot(r_sat3,r_hr3,'bo',markersize=4,markerfacecolor='w')
@@ -430,13 +421,15 @@ plt.xlim([-0.04,1.04])
 plt.xticks(np.arange(0, 1.2, step=0.2),[])
 plt.yticks(np.arange(0, 1.2, step=0.25),[])
 plt.text(0.24, 0.05, 'Soil class 3',fontdict=font)
-meanf=supfm
-f = interp1d(s_sat, meanf)
-r_hrnew=f(r_sat3)
-w1=linearfit(r_hrnew,r_hr3)
-print 'doran3 supeca: y=x*%f+%f, R2=%f'%(w1[0],w1[2],w1[5])
-print '-----------------------------------------------------'
 plt.subplot(439)
+#meanf=np.mean(supfls,0)
+meanf=supfm
+#f = interp1d(s_sat, meanf)
+#r_hrnew=f(r_sat3)
+r_hrnew=np.interp(r_sat3,s_sat,meanf)
+if print_stat:
+    w1=linearfit(r_hrnew,r_hr3)
+    print 'doran3 supeca: y=x*%f+%f, R2=%f'%(w1[0],w1[2],w1[5])
 plt.plot(s_sat,np.transpose(supfls),'0.7')
 plt.plot(s_sat,supfm,'k')
 plt.plot(r_sat3,r_hr3,'bo',markersize=4,markerfacecolor='w')
@@ -445,6 +438,7 @@ plt.xlim([-0.04,1.04])
 plt.xticks(np.arange(0, 1.2, step=0.2),[])
 plt.yticks(np.arange(0, 1.2, step=0.25),[])
 plt.text(0.24, 0.05, 'Soil class 3',fontdict=font)
+print '-----------------------------------------------------'
 sand=[]
 clay=[]
 soil_type=[]
@@ -478,32 +472,23 @@ while k < kt:
     Kaff_o2g_full,Kaff_o2g,k2,k1_o2,k1_o2_full,kappa_tops=calc_Kaff_O2(s_sat, theta, epsi, taug, tauw, film, DZ, Ncello, BT, alphaV,factw)
     Kaff_o2g_full=Kaff_o2g_full*o2scal
     k1_o2_full=k1_o2_full/o2scal
-    k2=k2*10.
-    Vmax=BT*k2
-    Ncell=10
+
+    Ncell=Ncello
     k1_s,Kaff_s,Kaff_s_0=calc_Kaff_SC(s_sat, theta, epsi, taug, tauw,  film, DZ, Ncell, alphaV)
     #damm model
-    fO2=O2/(Kaff_o2g_full+O2)
-    fS=S/(Kaff_s+S)
-    dammf=fO2*fS*factw
+    k2=k2*k2f
+    Vmax=BT*k2
+    dammf=damm_flx(O2,S,factw,Kaff_s*1.e0,Kaff_o2g,kappa_tops,Vmax)
     damfmax=np.max(dammf)
     dammf=dammf/damfmax
     #su model
-    js=S*k1_s
-    jo2=O2*k1_o2_full
-    suf=1./(1./k2+1./jo2+1./js-1./(js+jo2))*factw
+    suf=su_flx(O2,S, factw,BT, k2*1.e0, k1_o2, k1_s,kappa_tops)
     sufmax=np.max(suf)
     suf=suf/sufmax
     #supeca model
-    Kaff_s=k2/k1_s
     ms=0.0
     Km_s=2.0
-    nn=len(jo2)
-    ni=0
-    supf=np.zeros(nn)
-    while (ni<nn):
-        supf[ni]=supeca_model(O2,S,BT, ms, Kaff_o2g_full[ni], Kaff_s[ni], Km_s)*factw[ni]*k2
-        ni=ni+1
+    supf=supmic_flx(O2,S,factw, BT, ms, Km_s, Kaff_o2g, Kaff_s, kappa_tops, k2)
     supfmax=np.max(supf)
     supf=supf/supfmax
     dammfls.append(dammf)
@@ -513,19 +498,19 @@ while k < kt:
 pct_claym=pct_claym/kk
 pct_sandm=pct_sandm/kk
 dammfm, sufm, supfm=calc_mean_func(pct_claym, pct_sandm)
-if o2scal != 1.0:
-    for jj in range(len(s_sat)):
-        ff.write('%.2f,%.3f,%.3f,%.3f\n'%(s_sat[jj],dammfm[jj],sufm[jj],supfm[jj]))
-    ff.close()
-
-
+for jj in range(len(s_sat)):
+    ff.write('%.2f,%.3f,%.3f,%.3f\n'%(s_sat[jj],dammfm[jj],sufm[jj],supfm[jj]))
+ff.close()
+print np.shape(dammfls)
 plt.subplot(4,3,10)
 #meanf=np.mean(dammfls,0)
 meanf=dammfm
-f = interp1d(s_sat, meanf)
-r_hrnew=f(r_sat4)
-w1=linearfit(r_hrnew,r_hr4)
-print 'franz damm: y=x*%f+%f, R2=%f'%(w1[0],w1[2],w1[5])
+#f = interp1d(s_sat, meanf)
+#r_hrnew=f(r_sat4)
+r_hrnew=np.interp(r_sat4,s_sat,meanf)
+if print_stat:
+    w1=linearfit(r_hrnew,r_hr4)
+    print 'franz damm: y=x*%f+%f, R2=%f'%(w1[0],w1[2],w1[5])
 plt.plot(s_sat,np.transpose(dammfls),'0.7')
 plt.plot(s_sat,dammfm,'k')
 plt.plot(r_sat4,r_hr4,'bo',markersize=4,markerfacecolor='w')
@@ -535,12 +520,15 @@ plt.xticks(np.arange(0, 1.2, step=0.2),[0.0,'',0.4,'',0.8,''])
 plt.yticks(np.arange(0, 1.2, step=0.25),[0.0,'',0.5,'',1.0])
 plt.text(0.24, 0.05, 'Soil class 4',fontdict=font)
 plt.subplot(4,3,11)
-#meanf=np.mean(sufls,0)
+meanf=np.mean(sufls,0)
 meanf=sufm
-f = interp1d(s_sat, meanf)
-r_hrnew=f(r_sat4)
-w1=linearfit(r_hrnew,r_hr4)
-print 'franz su: y=x*%f+%f, R2=%f'%(w1[0],w1[2],w1[5])
+
+#f = interp1d(s_sat, meanf)
+#r_hrnew=f(r_sat4)
+r_hrnew=np.interp(r_sat4,s_sat,meanf)
+if print_stat:
+    w1=linearfit(r_hrnew,r_hr4)
+    print 'franz su: y=x*%f+%f, R2=%f'%(w1[0],w1[2],w1[5])
 plt.plot(s_sat,np.transpose(sufls),'0.7')
 plt.plot(s_sat,sufm,'k')
 plt.plot(r_sat4,r_hr4,'bo',markersize=4,markerfacecolor='w')
@@ -550,12 +538,16 @@ plt.xticks(np.arange(0, 1.2, step=0.2),[0.0,'',0.4,'',0.8,''])
 plt.yticks(np.arange(0, 1.2, step=0.25),[])
 plt.text(0.24, 0.05, 'Soil class 4',fontdict=font)
 plt.subplot(4,3,12)
+
 #meanf=np.mean(supfls,0)
 meanf=supfm
-f = interp1d(s_sat, meanf)
-r_hrnew=f(r_sat4)
-w1=linearfit(r_hrnew,r_hr4)
-print 'franz supeca: y=x*%f+%f, R2=%f'%(w1[0],w1[2],w1[5])
+#f = interp1d(s_sat, meanf)
+#r_hrnew=f(r_sat4)
+r_hrnew=np.interp(r_sat4,s_sat,meanf)
+if print_stat:
+    w1=linearfit(r_hrnew,r_hr4)
+    print 'franz supeca: y=x*%f+%f, R2=%f'%(w1[0],w1[2],w1[5])
+
 plt.plot(s_sat,np.transpose(supfls),'0.7')
 plt.plot(s_sat,supfm,'k')
 plt.plot(r_sat4,r_hr4,'bo',markersize=4,markerfacecolor='w')

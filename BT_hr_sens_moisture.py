@@ -3,8 +3,10 @@ from DAMM_model import damm_flx
 from supeca import supmic_flx
 from su_model import su_flx
 import numpy as np
+
+k2f=10.  #number of C atmos per substrate molecule
 #set up model parameters
-DZ=0.15  #topsoil thickness, 10 cm
+DZ=0.1  #topsoil thickness, 10 cm
 alphaV=80.0  #volume a cell occupies
 mb=np.array([0.5,1.,2.,3.])   #mol of microbial C
 Ncello=10.0  #number of cells per microsite, this is for oxygen
@@ -38,11 +40,12 @@ while k < kt:
     Kaff_o2g_full,Kaff_o2g,k2,k1_o2,k1_o2_full,kappa_tops=calc_Kaff_O2(s_sat, theta, epsi, taug, tauw, film, DZ, Ncello, BT[k], alphaV,factw)
     Kaff_o2g_full=Kaff_o2g_full*o2scal
     k1_o2_full=k1_o2_full/o2scal
-    k2=k2*10.
-    Vmax=BT[k]*k2
+
     Ncell=10
     k1_s,Kaff_s,Kaff_s_0=calc_Kaff_SC(s_sat, theta, epsi, taug, tauw,  film, DZ, Ncell, alphaV)
     #damm model
+    k2=k2*k2f
+    Vmax=BT[k]*k2
     dammf=damm_flx(O2,S,factw,Kaff_s*1.e0,Kaff_o2g,kappa_tops,Vmax)
     damfmax=np.max(dammf)
     dammf=dammf/damfmax
@@ -67,7 +70,7 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 
 if plt_to_file:
-    pdf=PdfPages('figure/BT_hrsens.pdf')
+    pdf=PdfPages('figure/Figure7.pdf')
     fig=plt.figure()
 font = {'family': 'serif',
         'color':  'black',

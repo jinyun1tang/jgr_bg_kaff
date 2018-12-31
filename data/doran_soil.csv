@@ -1,0 +1,19 @@
+ soil name       ,   sand (%),  clay (%), bulk dens (g cm-3), fig_label
+walla walla sil  ,   16      ,  16      , 1.10, 1
+Barnes I         ,   39    ,    23    , 1.20, 1
+Pullman sicl     ,   18     ,   30    , 1.10, 1
+Sharpsburg sicl  ,   3      ,   34    , 1.10, 1
+Houston Black sic,   12     ,   46    , 1.00, 1
+Crider sil       ,   3      ,   22    , 1.10, 1
+Miami sil        ,   29     ,   20    , 1.2, 1
+Yolo sil         ,   22     ,   24    , 1.2, 1
+Frederick sil    ,   19     ,   17    , 1.1, 1
+Rains sil        ,   33     ,   14    , 1.1, 1
+Cariboul I       ,   39     ,   12    , 1.0, 1
+Clarion sc       ,   53     ,   18    , 1.2, 2
+Valentine s      ,   90     ,   3     , 1.35, 2
+Mohave sci       ,   54     ,   22    , 1.2, 2
+Fort collins scl ,   55     ,   26    , 1.2, 2
+Cecil sl         ,   70     ,   14    , 1.1, 2
+Kole Kole I      ,   49     ,   14    , 1.1, 3
+Wahiwa c         ,    7     ,   58    , 1.1, 3

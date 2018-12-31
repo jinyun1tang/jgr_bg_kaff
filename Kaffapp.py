@@ -21,16 +21,16 @@ def set_micpara(k20=100.,npsite=3000.):
     k2_0=k20
     Npsite=npsite
 #assuming a spheric cell
-def calc_cell_permolC(r_cell):
+def calc_cell_permolC(r_cell=1.15e-6):
     #return mol number of cells per mol C
     #using allometric relationship from
-    v_unit=1.e-18  #unit convertor for volume
-    b_unit=1.e-15  #unit convertor for dry weight
+    v_unit=1.e-18  #unit convertor for volume, cubic micrometer
+    b_unit=1.e-15  #unit convertor for dry weight, femto gram
     C_frac=0.5     #fraction of dry weight as carbon
-    r_cell=1.15e-6      #cell radius
+    #r_cell=1.15e-6      #cell radius, recommend value from the literature
     v_cell=4./3.*math.pi*r_cell**3. #cell volume
-    DW_C_cell=435*(v_cell/v_unit)**0.86*b_unit*C_frac
-    DW_C_mol=DW_C_cell*Na
+    DW_C_cell=435*(v_cell/v_unit)**0.86*b_unit*C_frac  #C per cell
+    DW_C_mol=DW_C_cell*Na   #C per mol cell
     return 12./DW_C_mol
 def calc_Kaff_soil(pct_clay, pct_sand, fom=0.0):
 
@@ -94,10 +94,10 @@ def calc_Kaff_O2(s_sat, theta, epsi, taug, tauw, film, DZ, Ncell, BT, alphaV, fa
     rs_tops=1./ksurf+DZ*Ratm*bunsen_o2   #gaseous
     #using the DAMM model
 
-    k1_o2=4.0*math.pi*Dw_o2*rc*fintc*Na
-    Kaff_o2_0=k2/k1_o2   #reference affinity parameter, as number of molecules per m3, aqueous
-    kapvoi=(film/(Dw_o2*rm*(rm+film))+1.0/(Dwbo2*(rm+film)))*vm/(4.0*math.pi)
-    gamma_o2=1.0+k1_o2*Bdens*kapvoi/vm
+    k1_o2=4.0*math.pi*Dw_o2*rc*fintc*Na  #equation (13)
+    Kaff_o2_0=k2/k1_o2   #reference affinity parameter, as number of molecules per m3, aqueous, equation (15)
+    kapvoi=(film/(Dw_o2*rm*(rm+film))+1.0/(Dwbo2*(rm+film)))*vm/(4.0*math.pi)  #equation (2)
+    gamma_o2=1.0+k1_o2*Bdens*kapvoi/vm  #equation (11)
 
     kapvoi_full=kapvoi/(Nmsite+1.e-12)+rs_tops
     gamma_o2_full=1.0+k1_o2*Bdens*kapvoi_full/vm
@@ -117,10 +117,10 @@ def calc_Kaff_SC(s_sat, theta, epsi, taug, tauw,  film, DZ, Ncell, alphaV):
     #compute the exact affinity
     fintc=Npsite*rp/(Npsite*rp+math.pi*rc) #interception rate
     Dw_s=1.4e-9
-    k1_s=4.0*math.pi*Dw_s*rc*fintc*Na
-    Kaff_s_0=k2/k1_s   #reference affinity parameter
-    kapvsi=(film/(Dw_s*rm*(rm+film))+1./(Dw_s*tauw*theta*(rm+film)+1.e-20))*vm/(4.0*math.pi)
-    gamma_s=1.0+k1_s*Bdens*kapvsi/vm
+    k1_s=4.0*math.pi*Dw_s*rc*fintc*Na   #equation (13)
+    Kaff_s_0=k2/k1_s   #reference affinity parameter, equation (15)
+    kapvsi=(film/(Dw_s*rm*(rm+film))+1./(Dw_s*tauw*theta*(rm+film)+1.e-20))*vm/(4.0*math.pi)  #equation (2)
+    gamma_s=1.0+k1_s*Bdens*kapvsi/vm   #equation (11)
     k1_s=k1_s/gamma_s
     Kaff_s=k2/k1_s
     return k1_s,Kaff_s,Kaff_s_0
