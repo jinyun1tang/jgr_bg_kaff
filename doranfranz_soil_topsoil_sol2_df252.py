@@ -9,7 +9,7 @@ print_stat=True
 #from scipy.interpolate import interp1d
 r_sat1=[]
 r_hr1=[]
-with open('data/doran_1.csv', 'rb') as f:
+with open('data/doran_1.csv') as f:
     reader = csv.reader(f,delimiter=',')
     k=0
     for row in reader:
@@ -21,7 +21,7 @@ with open('data/doran_1.csv', 'rb') as f:
 
 r_sat2=[]
 r_hr2=[]
-with open('data/doran_2.csv', 'rb') as f:
+with open('data/doran_2.csv') as f:
     reader = csv.reader(f,delimiter=',')
     k=0
     for row in reader:
@@ -33,7 +33,7 @@ with open('data/doran_2.csv', 'rb') as f:
 
 r_sat3=[]
 r_hr3=[]
-with open('data/doran_3.csv', 'rb') as f:
+with open('data/doran_3.csv') as f:
     reader = csv.reader(f,delimiter=',')
     k=0
     for row in reader:
@@ -45,7 +45,7 @@ with open('data/doran_3.csv', 'rb') as f:
 
 r_sat4=[]
 r_hr4=[]
-with open('data/franz.csv', 'rb') as f:
+with open('data/franz.csv') as f:
     reader = csv.reader(f,delimiter=',')
     k=0
     for row in reader:
@@ -63,12 +63,12 @@ soil_type=[]
 k1s=0
 k2s=0
 #data from Doran et al., 1990, table 1
-with open('data/doran_soil.csv', 'rb') as f:
+with open('data/doran_soil.csv') as f:
     reader = csv.reader(f,delimiter=',')
     k=0
 
     for row in reader:
-        print row[0],row[1],row[2],row[4]
+        print (row[0],row[1],row[2],row[4])
         if k>=1:
             sand.append(float(row[1]))
             clay.append(float(row[2]))
@@ -98,7 +98,7 @@ from Kaffapp import rc, calc_Kaff_soil, calc_Kaff_O2, calc_cell_permolC, calc_Ka
 from supeca import supeca_model
 #number of cells per mol carbon
 cell_molC=calc_cell_permolC(rc)
-print cell_molC
+print (cell_molC)
 BT=mb*cell_molC  #total number of cells, in mol /m3
 
 O2=8.57 # mol /m3
@@ -175,7 +175,7 @@ def calc_mean_func(pct_claym, pct_sandm):
     return dammf, suf, supf
 pct_claym=pct_claym/kk
 pct_sandm=pct_sandm/kk
-print 'soil class1: mclay=%.2f,msand=%.2f'%(pct_claym,pct_sandm)
+print ('soil class1: mclay=%.2f,msand=%.2f'%(pct_claym,pct_sandm))
 dammfm, sufm, supfm=calc_mean_func(pct_claym, pct_sandm)
 plt_to_file=True
 import matplotlib
@@ -199,7 +199,7 @@ meanf=dammfm
 r_hrnew=np.interp(r_sat1,s_sat,meanf)
 if print_stat:
     w1=linearfit(r_hrnew,r_hr1)
-    print 'doran1 damm: y=x*%f+%f, R2=%f'%(w1[0],w1[2],w1[5])
+    print ('doran1 damm: y=x*%f+%f, R2=%f'%(w1[0],w1[2],w1[5]))
 plt.plot(s_sat,np.transpose(dammfls),'0.7')
 plt.plot(s_sat,dammfm,'k')
 plt.text(-0.04, 0.85, '(a1)',fontdict=font)
@@ -216,7 +216,7 @@ meanf=sufm
 r_hrnew=np.interp(r_sat1,s_sat,meanf)
 if print_stat:
     w1=linearfit(r_hrnew,r_hr1)
-    print 'doran1 su: y=x*%f+%f, R2=%f'%(w1[0],w1[2],w1[5])
+    print ('doran1 su: y=x*%f+%f, R2=%f'%(w1[0],w1[2],w1[5]))
 plt.plot(s_sat,np.transpose(sufls),'0.7')
 plt.plot(s_sat,sufm,'k')
 plt.plot(r_sat1,r_hr1,'bo',markersize=4,markerfacecolor='w')
@@ -233,7 +233,7 @@ meanf=supfm
 r_hrnew=np.interp(r_sat1,s_sat,meanf)
 if print_stat:
     w1=linearfit(r_hrnew,r_hr1)
-    print 'doran1 supeca: y=x*%f+%f, R2=%f'%(w1[0],w1[2],w1[5])
+    print ('doran1 supeca: y=x*%f+%f, R2=%f'%(w1[0],w1[2],w1[5]))
 plt.plot(s_sat,np.transpose(supfls),'0.7')
 plt.plot(s_sat,supfm,'k')
 plt.plot(r_sat1,r_hr1,'bo',markersize=4,markerfacecolor='w')
@@ -242,7 +242,7 @@ plt.xlim([-0.04,1.04])
 plt.xticks(np.arange(0, 1.2, step=0.2),[])
 plt.yticks(np.arange(0, 1.2, step=0.25),[])
 plt.text(0.24, 0.05, 'Soil class 1',fontdict=font)
-print '-----------------------------------------------------'
+print ('-----------------------------------------------------')
 dammfls=[]
 sufls=[]
 supfls=[]
@@ -283,7 +283,7 @@ while k < k2s:
 
 pct_claym=pct_claym/kk
 pct_sandm=pct_sandm/kk
-print 'soil class2: mclay=%.2f,msand=%.2f'%(pct_claym,pct_sandm)
+print ('soil class2: mclay=%.2f,msand=%.2f'%(pct_claym,pct_sandm))
 dammfm, sufm, supfm=calc_mean_func(pct_claym, pct_sandm)
 plt.subplot(434)
 #meanf=np.mean(dammfls,0)
@@ -293,7 +293,7 @@ meanf=dammfm
 r_hrnew=np.interp(r_sat2,s_sat,meanf)
 if print_stat:
     w1=linearfit(r_hrnew,r_hr2)
-    print 'doran2 damm: y=x*%f+%f, R2=%f'%(w1[0],w1[2],w1[5])
+    print ('doran2 damm: y=x*%f+%f, R2=%f'%(w1[0],w1[2],w1[5]))
 plt.plot(s_sat,np.transpose(dammfls),'0.7')
 plt.plot(s_sat,dammfm,'k')
 plt.plot(r_sat2,r_hr2,'bo',markersize=4,markerfacecolor='w')
@@ -310,7 +310,7 @@ meanf=sufm
 r_hrnew=np.interp(r_sat2,s_sat,meanf)
 if print_stat:
     w1=linearfit(r_hrnew,r_hr2)
-    print 'doran2 su: y=x*%f+%f, R2=%f'%(w1[0],w1[2],w1[5])
+    print ('doran2 su: y=x*%f+%f, R2=%f'%(w1[0],w1[2],w1[5]))
 plt.plot(s_sat,np.transpose(sufls),'0.7')
 plt.plot(s_sat,sufm,'k')
 plt.plot(r_sat2,r_hr2,'bo',markersize=4,markerfacecolor='w')
@@ -327,7 +327,7 @@ meanf=supfm
 r_hrnew=np.interp(r_sat2,s_sat,meanf)
 if print_stat:
     w1=linearfit(r_hrnew,r_hr2)
-    print 'doran2 supeca: y=x*%f+%f, R2=%f'%(w1[0],w1[2],w1[5])
+    print ('doran2 supeca: y=x*%f+%f, R2=%f'%(w1[0],w1[2],w1[5]))
 plt.plot(s_sat,np.transpose(supfls),'0.7')
 plt.plot(s_sat,supfm,'k')
 plt.plot(r_sat2,r_hr2,'bo',markersize=4,markerfacecolor='w')
@@ -336,7 +336,7 @@ plt.xlim([-0.04,1.04])
 plt.xticks(np.arange(0, 1.2, step=0.2),[])
 plt.yticks(np.arange(0, 1.2, step=0.25),[])
 plt.text(0.24, 0.05, 'Soil class 2',fontdict=font)
-print '-----------------------------------------------------'
+print ('-----------------------------------------------------')
 dammfls=[]
 sufls=[]
 supfls=[]
@@ -378,7 +378,7 @@ while k < kt:
 
 pct_claym=pct_claym/kk
 pct_sandm=pct_sandm/kk
-print 'soil class3: mclay=%.2f,msand=%.2f'%(pct_claym,pct_sandm)
+print ('soil class3: mclay=%.2f,msand=%.2f'%(pct_claym,pct_sandm))
 dammfm, sufm, supfm=calc_mean_func(pct_claym, pct_sandm)
 
 plt.subplot(437)
@@ -389,7 +389,7 @@ meanf=dammfm
 r_hrnew=np.interp(r_sat3,s_sat,meanf)
 if print_stat:
     w1=linearfit(r_hrnew,r_hr3)
-    print 'doran3 damm: y=x*%f+%f, R2=%f'%(w1[0],w1[2],w1[5])
+    print ('doran3 damm: y=x*%f+%f, R2=%f'%(w1[0],w1[2],w1[5]))
 plt.plot(s_sat,np.transpose(dammfls),'0.7')
 plt.plot(s_sat,dammfm,'k')
 plt.plot(r_sat3,r_hr3,'bo',markersize=4,markerfacecolor='w')
@@ -406,7 +406,7 @@ meanf=sufm
 r_hrnew=np.interp(r_sat3,s_sat,meanf)
 if print_stat:
     w1=linearfit(r_hrnew,r_hr3)
-    print 'doran3 su: y=x*%f+%f, R2=%f'%(w1[0],w1[2],w1[5])
+    print ('doran3 su: y=x*%f+%f, R2=%f'%(w1[0],w1[2],w1[5]))
 plt.plot(s_sat,np.transpose(sufls),'0.7')
 plt.plot(s_sat,sufm,'k')
 plt.plot(r_sat3,r_hr3,'bo',markersize=4,markerfacecolor='w')
@@ -423,7 +423,7 @@ meanf=supfm
 r_hrnew=np.interp(r_sat3,s_sat,meanf)
 if print_stat:
     w1=linearfit(r_hrnew,r_hr3)
-    print 'doran3 supeca: y=x*%f+%f, R2=%f'%(w1[0],w1[2],w1[5])
+    print ('doran3 supeca: y=x*%f+%f, R2=%f'%(w1[0],w1[2],w1[5]))
 plt.plot(s_sat,np.transpose(supfls),'0.7')
 plt.plot(s_sat,supfm,'k')
 plt.plot(r_sat3,r_hr3,'bo',markersize=4,markerfacecolor='w')
@@ -432,16 +432,16 @@ plt.xlim([-0.04,1.04])
 plt.xticks(np.arange(0, 1.2, step=0.2),[])
 plt.yticks(np.arange(0, 1.2, step=0.25),[])
 plt.text(0.24, 0.05, 'Soil class 3',fontdict=font)
-print '-----------------------------------------------------'
+print ('-----------------------------------------------------')
 sand=[]
 clay=[]
 soil_type=[]
 
-with open('data/franz_soil.csv', 'rb') as f:
+with open('data/franz_soil.csv') as f:
     reader = csv.reader(f,delimiter=',')
     k=0
     for row in reader:
-        print row[0],row[1],row[2]
+        print (row[0],row[1],row[2])
         if k>=1:
             sand.append(float(row[1]))
             clay.append(float(row[2]))
@@ -491,10 +491,10 @@ while k < kt:
     k=k+1
 pct_claym=pct_claym/kk
 pct_sandm=pct_sandm/kk
-print 'soil class4: mclay=%.2f,msand=%.2f'%(pct_claym,pct_sandm)
+print ('soil class4: mclay=%.2f,msand=%.2f'%(pct_claym,pct_sandm))
 dammfm, sufm, supfm=calc_mean_func(pct_claym, pct_sandm)
 
-print np.shape(dammfls)
+print( np.shape(dammfls))
 plt.subplot(4,3,10)
 #meanf=np.mean(dammfls,0)
 meanf=dammfm
@@ -503,7 +503,7 @@ meanf=dammfm
 r_hrnew=np.interp(r_sat4,s_sat,meanf)
 if print_stat:
     w1=linearfit(r_hrnew,r_hr4)
-    print 'franz damm: y=x*%f+%f, R2=%f'%(w1[0],w1[2],w1[5])
+    print ('franz damm: y=x*%f+%f, R2=%f'%(w1[0],w1[2],w1[5]))
 plt.plot(s_sat,np.transpose(dammfls),'0.7')
 plt.plot(s_sat,dammfm,'k')
 plt.plot(r_sat4,r_hr4,'bo',markersize=4,markerfacecolor='w')
@@ -520,7 +520,7 @@ meanf=sufm
 r_hrnew=np.interp(r_sat4,s_sat,meanf)
 if print_stat:
     w1=linearfit(r_hrnew,r_hr4)
-    print 'franz su: y=x*%f+%f, R2=%f'%(w1[0],w1[2],w1[5])
+    print ('franz su: y=x*%f+%f, R2=%f'%(w1[0],w1[2],w1[5]))
 plt.plot(s_sat,np.transpose(sufls),'0.7')
 plt.plot(s_sat,sufm,'k')
 plt.plot(r_sat4,r_hr4,'bo',markersize=4,markerfacecolor='w')
@@ -538,7 +538,7 @@ meanf=supfm
 r_hrnew=np.interp(r_sat4,s_sat,meanf)
 if print_stat:
     w1=linearfit(r_hrnew,r_hr4)
-    print 'franz supeca: y=x*%f+%f, R2=%f'%(w1[0],w1[2],w1[5])
+    print ('franz supeca: y=x*%f+%f, R2=%f'%(w1[0],w1[2],w1[5]))
 
 plt.plot(s_sat,np.transpose(supfls),'0.7')
 plt.plot(s_sat,supfm,'k')
@@ -553,7 +553,7 @@ font = {'family': 'serif',
         'weight': 'normal',
         'size': 14,
         }
-plt.text(0.115, 0.95, 'rDAMM model',fontdict=font,transform=plt.gcf().transFigure)
+plt.text(0.115, 0.95, 'DM model',fontdict=font,transform=plt.gcf().transFigure)
 plt.text(0.42, 0.95, 'SU model',fontdict=font,transform=plt.gcf().transFigure)
 plt.text(0.7, 0.95, 'SUPECA model',fontdict=font,transform=plt.gcf().transFigure)
 plt.text(0.375, 0.015, 'Relative saturation',fontdict=font,transform=plt.gcf().transFigure)
